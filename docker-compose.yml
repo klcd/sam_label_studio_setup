@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  segment_anything_model:
+    container_name: segment_anything_model
+    #image: heartexlabs/label-studio-ml-backend:sam-master
+    build:
+      context: ./sam
+      shm_size: '4gb'
+      args:
+        TEST_ENV: ${TEST_ENV}
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+        reservations:
+          memory: 8G
+# Add this to pass through 1 GPU
+#            devices:
+#              - driver: nvidia
+#                count: 1
+#                capabilities: [gpu]
+    env_file:
+      - ./.env.sam
+    ports:
+      - 9090:9090
+    volumes:
+      - "./data/server:/data"
+      - "/Users/cedric/Projects/sam_label_studio_setup/my_data/media/upload:/data/upload"
+
+    networks:
+     - my_network
+
+
+  label_studio:
+    container_name: label_studio
+    image: heartexlabs/label-studio:latest
+
+    ports:
+      - 8080:8080
+
+    env_file:
+      - ./.env.label_studio
+
+    volumes:
+      - ./my_data:/label-studio/data
+
+    networks:
+     - my_network
+
+networks:
+  my_network:
+    driver: bridge
